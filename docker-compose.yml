@@ -1,0 +1,191 @@
+version: '3.8'
+
+services:
+  # ─── API Gateway (seul service exposé) ─────────────────
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: brvm-gateway
+    ports:
+      - "5000:5000"
+    env_file: .env
+    environment:
+      PORT: "5000"
+    depends_on:
+      - user-service
+      - company-service
+      - market-data-service
+      - portfolio-service
+      - education-service
+      - subscription-service
+      - credit-service
+      - ai-service
+      - report-service
+    networks:
+      - brvm-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── User Service ───────────────────────────────────────
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: brvm-user-svc
+    env_file: .env
+    environment:
+      PORT: "3001"
+      DB_NAME: "${USER_DB_NAME}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── Company Service ────────────────────────────────────
+  company-service:
+    build:
+      context: ./services/company-service
+      dockerfile: Dockerfile
+    container_name: brvm-company-svc
+    env_file: .env
+    environment:
+      PORT: "3002"
+      DB_NAME: "${COMPANY_DB_NAME}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── Market Data Service ────────────────────────────────
+  market-data-service:
+    build:
+      context: ./services/market-data-service
+      dockerfile: Dockerfile
+    container_name: brvm-market-svc
+    env_file: .env
+    environment:
+      PORT: "3003"
+      DB_NAME: "${COMPANY_DB_NAME}"
+      COMPANY_SERVICE_URL: "http://company-service:3002"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── Portfolio Service ──────────────────────────────────
+  portfolio-service:
+    build:
+      context: ./services/portfolio-service
+      dockerfile: Dockerfile
+    container_name: brvm-portfolio-svc
+    env_file: .env
+    environment:
+      PORT: "3004"
+      DB_NAME: "${PORTFOLIO_DB_NAME}"
+      COMPANY_SERVICE_URL: "http://company-service:3002"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── Education Service ──────────────────────────────────
+  education-service:
+    build:
+      context: ./services/education-service
+      dockerfile: Dockerfile
+    container_name: brvm-education-svc
+    env_file: .env
+    environment:
+      PORT: "3005"
+      DB_NAME: "${EDUCATION_DB_NAME}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── Subscription Service ───────────────────────────────
+  subscription-service:
+    build:
+      context: ./services/subscription-service
+      dockerfile: Dockerfile
+    container_name: brvm-subscription-svc
+    env_file: .env
+    environment:
+      PORT: "3006"
+      DB_NAME: "${SUBSCRIPTION_DB_NAME}"
+      CREDIT_SERVICE_URL: "http://credit-service:3007"
+      USER_SERVICE_URL: "http://user-service:3001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── Credit Service ─────────────────────────────────────
+  credit-service:
+    build:
+      context: ./services/credit-service
+      dockerfile: Dockerfile
+    container_name: brvm-credit-svc
+    env_file: .env
+    environment:
+      PORT: "3007"
+      DB_NAME: "${CREDIT_DB_NAME}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── AI Service ─────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+    container_name: brvm-ai-svc
+    env_file: .env
+    environment:
+      PORT: "3008"
+      COMPANY_SERVICE_URL: "http://company-service:3002"
+      CREDIT_SERVICE_URL: "http://credit-service:3007"
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+  # ─── Report Service ─────────────────────────────────────
+  report-service:
+    build:
+      context: ./services/report-service
+      dockerfile: Dockerfile
+    container_name: brvm-report-svc
+    env_file: .env
+    environment:
+      PORT: "3009"
+      DB_NAME: "${REPORT_DB_NAME}"
+      COMPANY_SERVICE_URL: "http://company-service:3002"
+      AI_SERVICE_URL: "http://ai-service:3008"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - report-storage:/app/reports
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
+volumes:
+  report-storage:
+
+networks:
+  brvm-network:
+    driver: bridge
+    name: brvm-network
