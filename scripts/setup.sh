@@ -27,12 +27,12 @@ fi
 # 2. Initialiser les bases de données MariaDB
 echo -e "${YELLOW}Initialisation des bases de données MariaDB...${NC}"
 if command -v mysql &>/dev/null; then
-  mysql -u root -pSergetogo@2025 < database/init.sql && \
+  mysql -u root -p < database/init.sql && \
     echo -e "${GREEN}Bases de données créées avec succès.${NC}" || \
     echo -e "${YELLOW}Avertissement: Vérifiez la connexion MariaDB.${NC}"
 else
   echo -e "${YELLOW}mysql CLI non trouvé. Exécutez manuellement:${NC}"
-  echo "  mysql -u root -pSergetogo@2025 < database/init.sql"
+  echo "  mysql -u root -p < database/init.sql"
 fi
 
 # 3. Construire et démarrer les services

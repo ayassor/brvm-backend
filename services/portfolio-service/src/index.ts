@@ -9,7 +9,7 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '3004');
 app.use(cors()); app.use(morgan('dev')); app.use(express.json());
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'portfolio-service' }));
-app.use('/portfolios', portfoliosRouter);
+app.use('/', portfoliosRouter);
 
 async function start() {
   try {

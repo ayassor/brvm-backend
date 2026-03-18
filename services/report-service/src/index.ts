@@ -14,8 +14,8 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'report-service' }));
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
+app.use('/', authRoutes);
+app.use('/', userRoutes);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

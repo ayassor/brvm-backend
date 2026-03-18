@@ -92,11 +92,16 @@ function authOptional(
 }
 
 // ── Proxy factory ───────────────────────────────────────────
-function proxy(target: string, pathPrefix: string): express.RequestHandler {
+// Express strips the mount prefix from req.url before reaching the proxy.
+// - Sans prependPath : aucun rewrite (le path déjà strippé est correct)
+// - Avec prependPath : on le réinsère en tête du path strippé
+//   ex: GET /api/news/categories → req.url = '/categories' → '/news/categories'
+function proxy(target: string, pathPrefix: string, prependPath?: string): express.RequestHandler {
+  const pathRewrite = prependPath ? { '^': prependPath } : undefined;
   return createProxyMiddleware({
     target,
     changeOrigin: true,
-    pathRewrite: { [`^${pathPrefix}`]: '' },
+    ...(pathRewrite && { pathRewrite }),
     on: {
       error: (err: Error, _req, res) => {
         console.error(`[Proxy] Erreur → ${target}:`, err.message);
@@ -125,8 +130,14 @@ app.use('/api/subscriptions/plans',     proxy(S,  '/api/subscriptions/plans'));
 app.use('/api/education/glossary',      proxy(E,  '/api/education/glossary'));
 
 // ── Routes publiques avec auth optionnelle ──────────────────
+app.use('/api/news',                    authOptional, proxy(C,  '/api/news',       '/news'));
+app.use('/api/v1/stocks',               authOptional, proxy(C,  '/api/v1/stocks'));
 app.use('/api/companies',               authOptional, proxy(C,  '/api/companies'));
 app.use('/api/market',                  authOptional, proxy(MD, '/api/market'));
+
+// ── Routes admin (news + companies) ─────────────────────────
+app.use('/api/admin/news',              authRequired, proxy(C,  '/api/admin/news',      '/admin/news'));
+app.use('/api/admin/companies',         authRequired, proxy(C,  '/api/admin/companies', '/admin/companies'));
 app.use('/api/education/courses',       authOptional, proxy(E,  '/api/education/courses'));
 app.use('/api/education/articles',      authOptional, proxy(E,  '/api/education/articles'));
 
