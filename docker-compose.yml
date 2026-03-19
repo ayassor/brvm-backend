@@ -182,6 +182,20 @@ services:
       - brvm-network
     restart: unless-stopped
 
+  # ─── Frontend ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ../brvm-frontend
+      dockerfile: Dockerfile
+    container_name: brvm-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - brvm-network
+    restart: unless-stopped
+
 volumes:
   report-storage:
 

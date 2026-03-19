@@ -1,0 +1,42 @@
+CREATE TABLE IF NOT EXISTS sgis (
+  id            INT          NOT NULL AUTO_INCREMENT,
+  name          VARCHAR(200) NOT NULL,
+  country       VARCHAR(100) NOT NULL,
+  country_code  CHAR(2)      NOT NULL,
+  phone         VARCHAR(50)  DEFAULT NULL,
+  website       VARCHAR(200) DEFAULT NULL,
+  min_deposit   VARCHAR(100) DEFAULT NULL,
+  opening_fees  VARCHAR(100) DEFAULT NULL,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sgos (
+  id            INT          NOT NULL AUTO_INCREMENT,
+  name          VARCHAR(200) NOT NULL,
+  country       VARCHAR(100) NOT NULL,
+  country_code  CHAR(2)      NOT NULL,
+  address       VARCHAR(300) DEFAULT NULL,
+  phone         VARCHAR(50)  DEFAULT NULL,
+  email         VARCHAR(150) DEFAULT NULL,
+  website       VARCHAR(200) DEFAULT NULL,
+  partner_sgi   VARCHAR(200) DEFAULT NULL,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sgo_funds (
+  id           INT          NOT NULL AUTO_INCREMENT,
+  sgo_id       INT          NOT NULL,
+  name         VARCHAR(300) NOT NULL,
+  category     VARCHAR(10)  NOT NULL,
+  vl_current   DECIMAL(18,4) DEFAULT NULL,
+  perf_week    VARCHAR(20)  DEFAULT NULL,
+  created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_sgo_id (sgo_id),
+  CONSTRAINT fk_fund_sgo FOREIGN KEY (sgo_id) REFERENCES sgos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

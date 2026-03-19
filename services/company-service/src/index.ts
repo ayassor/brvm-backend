@@ -6,6 +6,7 @@ import sequelize from './config/database';
 import companiesRouter from './routes/companies';
 import { newsRouter, adminNewsRouter } from './routes/news';
 import adminCompaniesRouter            from './routes/adminCompanies';
+import marketParticipantsRouter        from './routes/marketParticipants';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3002');
@@ -15,6 +16,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'company-ser
 app.use('/news', newsRouter);
 app.use('/admin/news',      adminNewsRouter);
 app.use('/admin/companies', adminCompaniesRouter);
+app.use('/market-participants', marketParticipantsRouter);
 app.use('/', companiesRouter);
 
 async function start() {

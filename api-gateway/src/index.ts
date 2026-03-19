@@ -127,7 +127,7 @@ const R  = process.env.REPORT_SERVICE_URL!;
 // ── Routes publiques ────────────────────────────────────────
 app.use('/api/auth',                    proxy(U,  '/api/auth'));
 app.use('/api/subscriptions/plans',     proxy(S,  '/api/subscriptions/plans'));
-app.use('/api/education/glossary',      proxy(E,  '/api/education/glossary'));
+app.use('/api/education/glossary',      proxy(E,  '/api/education/glossary', '/glossary'));
 
 // ── Routes publiques avec auth optionnelle ──────────────────
 app.use('/api/news',                    authOptional, proxy(C,  '/api/news',       '/news'));
@@ -138,8 +138,9 @@ app.use('/api/market',                  authOptional, proxy(MD, '/api/market'));
 // ── Routes admin (news + companies) ─────────────────────────
 app.use('/api/admin/news',              authRequired, proxy(C,  '/api/admin/news',      '/admin/news'));
 app.use('/api/admin/companies',         authRequired, proxy(C,  '/api/admin/companies', '/admin/companies'));
-app.use('/api/education/courses',       authOptional, proxy(E,  '/api/education/courses'));
-app.use('/api/education/articles',      authOptional, proxy(E,  '/api/education/articles'));
+app.use('/api/education/admin',         authRequired, proxy(E,  '/api/education/admin', '/admin'));
+app.use('/api/education/courses',       authOptional, proxy(E,  '/api/education/courses', '/courses'));
+app.use('/api/education/articles',      authOptional, proxy(E,  '/api/education/articles', '/articles'));
 
 // ── Routes protégées ────────────────────────────────────────
 app.use('/api/users',                   authRequired, proxy(U,  '/api/users'));

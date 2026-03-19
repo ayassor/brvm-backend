@@ -7,6 +7,7 @@ import './models/Article';
 import './models/Course';
 import './models/Lesson';
 import './models/Glossary';
+import educationRouter from './routes/education';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3005');
@@ -18,6 +19,8 @@ app.use(express.json());
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'education-service' });
 });
+
+app.use('/', educationRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
