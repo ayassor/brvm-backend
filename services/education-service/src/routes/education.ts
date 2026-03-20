@@ -5,6 +5,7 @@ import { Article } from '../models/Article'
 import { Glossary } from '../models/Glossary'
 import sequelize from '../config/database'
 import { QueryTypes } from 'sequelize'
+import { requireAdmin } from '../middleware/auth'
 
 const router = Router()
 
@@ -77,7 +78,7 @@ router.get('/glossary', async (_req, res) => {
 // ─── ADMIN routes ─────────────────────────────────────────────
 
 // POST /admin/courses
-router.post('/admin/courses', async (req, res) => {
+router.post('/admin/courses', requireAdmin, async (req, res) => {
   try {
     const course = await Course.create(req.body)
     res.status(201).json(course)
@@ -87,7 +88,7 @@ router.post('/admin/courses', async (req, res) => {
 })
 
 // PUT /admin/courses/:id
-router.put('/admin/courses/:id', async (req, res) => {
+router.put('/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
     await Course.update(req.body, { where: { id: req.params.id } })
     const updated = await Course.findByPk(req.params.id)
@@ -98,7 +99,7 @@ router.put('/admin/courses/:id', async (req, res) => {
 })
 
 // DELETE /admin/courses/:id
-router.delete('/admin/courses/:id', async (req, res) => {
+router.delete('/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
     await Course.update({ is_active: false }, { where: { id: req.params.id } })
     res.json({ message: 'Cours désactivé.' })
@@ -108,7 +109,7 @@ router.delete('/admin/courses/:id', async (req, res) => {
 })
 
 // POST /admin/chapters
-router.post('/admin/chapters', async (req, res) => {
+router.post('/admin/chapters', requireAdmin, async (req, res) => {
   try {
     const { course_id, title, order_num } = req.body
     const [result] = await sequelize.query(
@@ -122,7 +123,7 @@ router.post('/admin/chapters', async (req, res) => {
 })
 
 // PUT /admin/chapters/:id
-router.put('/admin/chapters/:id', async (req, res) => {
+router.put('/admin/chapters/:id', requireAdmin, async (req, res) => {
   try {
     const { title, order_num } = req.body
     await sequelize.query(
@@ -136,7 +137,7 @@ router.put('/admin/chapters/:id', async (req, res) => {
 })
 
 // DELETE /admin/chapters/:id
-router.delete('/admin/chapters/:id', async (req, res) => {
+router.delete('/admin/chapters/:id', requireAdmin, async (req, res) => {
   try {
     await sequelize.query('DELETE FROM chapters WHERE id = ?', { replacements: [req.params.id], type: QueryTypes.DELETE })
     res.json({ message: 'Chapitre supprimé.' })
@@ -146,7 +147,7 @@ router.delete('/admin/chapters/:id', async (req, res) => {
 })
 
 // POST /admin/lessons
-router.post('/admin/lessons', async (req, res) => {
+router.post('/admin/lessons', requireAdmin, async (req, res) => {
   try {
     const lesson = await Lesson.create(req.body)
     res.status(201).json(lesson)
@@ -156,7 +157,7 @@ router.post('/admin/lessons', async (req, res) => {
 })
 
 // PUT /admin/lessons/:id
-router.put('/admin/lessons/:id', async (req, res) => {
+router.put('/admin/lessons/:id', requireAdmin, async (req, res) => {
   try {
     await Lesson.update(req.body, { where: { id: req.params.id } })
     const updated = await Lesson.findByPk(req.params.id)
@@ -167,7 +168,7 @@ router.put('/admin/lessons/:id', async (req, res) => {
 })
 
 // DELETE /admin/lessons/:id
-router.delete('/admin/lessons/:id', async (req, res) => {
+router.delete('/admin/lessons/:id', requireAdmin, async (req, res) => {
   try {
     await Lesson.destroy({ where: { id: req.params.id } })
     res.json({ message: 'Leçon supprimée.' })
@@ -177,7 +178,7 @@ router.delete('/admin/lessons/:id', async (req, res) => {
 })
 
 // POST /admin/articles
-router.post('/admin/articles', async (req, res) => {
+router.post('/admin/articles', requireAdmin, async (req, res) => {
   try {
     const article = await Article.create(req.body)
     res.status(201).json(article)
@@ -187,7 +188,7 @@ router.post('/admin/articles', async (req, res) => {
 })
 
 // PUT /admin/articles/:id
-router.put('/admin/articles/:id', async (req, res) => {
+router.put('/admin/articles/:id', requireAdmin, async (req, res) => {
   try {
     await Article.update(req.body, { where: { id: req.params.id } })
     const updated = await Article.findByPk(req.params.id)
@@ -198,7 +199,7 @@ router.put('/admin/articles/:id', async (req, res) => {
 })
 
 // DELETE /admin/articles/:id
-router.delete('/admin/articles/:id', async (req, res) => {
+router.delete('/admin/articles/:id', requireAdmin, async (req, res) => {
   try {
     await Article.update({ is_active: false }, { where: { id: req.params.id } })
     res.json({ message: 'Article désactivé.' })
@@ -208,7 +209,7 @@ router.delete('/admin/articles/:id', async (req, res) => {
 })
 
 // POST /admin/glossary
-router.post('/admin/glossary', async (req, res) => {
+router.post('/admin/glossary', requireAdmin, async (req, res) => {
   try {
     const term = await Glossary.create(req.body)
     res.status(201).json(term)
@@ -218,7 +219,7 @@ router.post('/admin/glossary', async (req, res) => {
 })
 
 // PUT /admin/glossary/:id
-router.put('/admin/glossary/:id', async (req, res) => {
+router.put('/admin/glossary/:id', requireAdmin, async (req, res) => {
   try {
     await Glossary.update(req.body, { where: { id: req.params.id } })
     const updated = await Glossary.findByPk(req.params.id)
@@ -229,7 +230,7 @@ router.put('/admin/glossary/:id', async (req, res) => {
 })
 
 // DELETE /admin/glossary/:id
-router.delete('/admin/glossary/:id', async (req, res) => {
+router.delete('/admin/glossary/:id', requireAdmin, async (req, res) => {
   try {
     await Glossary.destroy({ where: { id: req.params.id } })
     res.json({ message: 'Terme supprimé.' })
