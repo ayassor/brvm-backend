@@ -1,18 +1,45 @@
-import { Router } from 'express'
+import { Router, Response } from 'express'
 import { Course } from '../models/Course'
 import { Lesson } from '../models/Lesson'
 import { Article } from '../models/Article'
 import { Glossary } from '../models/Glossary'
+import { CourseAccess } from '../models/CourseAccess'
 import sequelize from '../config/database'
 import { QueryTypes } from 'sequelize'
-import { requireAdmin } from '../middleware/auth'
+import { requireAdmin, optionalAuth, AuthRequest } from '../middleware/auth'
+import { createHash } from 'crypto'
+
+function hashPassword(pwd: string): string {
+  return createHash('sha256').update(pwd + ':afrivesting-salt').digest('hex')
+}
 
 const router = Router()
 
+// Helper: get set of course IDs the user has special access to
+async function getUserAccessSet(userId?: number): Promise<Set<number>> {
+  if (!userId) return new Set()
+  const now = new Date()
+  const accesses = await CourseAccess.findAll({
+    where: {
+      user_id: userId,
+      // expires_at is null OR expires_at > now
+    },
+    attributes: ['course_id', 'expires_at'],
+  })
+  const ids = new Set<number>()
+  for (const a of accesses) {
+    if (!a.expires_at || a.expires_at > now) {
+      ids.add(a.course_id)
+    }
+  }
+  return ids
+}
+
 // GET /courses — liste complète avec chapitres et leçons
-router.get('/courses', async (_req, res) => {
+router.get('/courses', optionalAuth, async (req: AuthRequest, res: Response) => {
   try {
     const courses = await Course.findAll({ where: { is_active: true }, order: [['id', 'ASC']] })
+    const accessSet = await getUserAccessSet(req.userId)
 
     const result = await Promise.all(courses.map(async (course) => {
       const chapters = await sequelize.query(
@@ -44,6 +71,8 @@ router.get('/courses', async (_req, res) => {
         is_paid: course.is_paid,
         price: course.price,
         is_active: course.is_active,
+        has_access: accessSet.has(course.id),
+        has_password: !!((course as any).password_hash),
         chapters: chaptersWithLessons,
       }
     }))
@@ -51,6 +80,32 @@ router.get('/courses', async (_req, res) => {
     res.json(result)
   } catch (err) {
     console.error('[GET /courses]', err)
+    res.status(500).json({ error: 'Erreur serveur.' })
+  }
+})
+
+// POST /courses/:id/unlock — vérifier mot de passe et débloquer (session côté client)
+router.post('/courses/:id/unlock', async (req, res) => {
+  try {
+    const { password } = req.body
+    if (!password) return res.status(400).json({ error: 'Mot de passe requis.' })
+
+    const rows = await sequelize.query(
+      'SELECT id, password_hash FROM courses WHERE id = ? AND is_active = 1',
+      { replacements: [req.params.id], type: QueryTypes.SELECT }
+    ) as any[]
+    const course = rows[0] as any
+
+    if (!course) return res.status(404).json({ error: 'Cours introuvable.' })
+    if (!course.password_hash) return res.json({ success: true }) // pas de mot de passe
+
+    const hash = hashPassword(password)
+    if (hash !== course.password_hash) {
+      return res.status(401).json({ error: 'Mot de passe incorrect.' })
+    }
+
+    res.json({ success: true, token: hash.slice(0, 16) }) // token court pour localStorage
+  } catch (err) {
     res.status(500).json({ error: 'Erreur serveur.' })
   }
 })
@@ -103,6 +158,21 @@ router.delete('/admin/courses/:id', requireAdmin, async (req, res) => {
   try {
     await Course.update({ is_active: false }, { where: { id: req.params.id } })
     res.json({ message: 'Cours désactivé.' })
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur.' })
+  }
+})
+
+// PUT /admin/courses/:id/password — définir ou supprimer le mot de passe
+router.put('/admin/courses/:id/password', requireAdmin, async (req, res) => {
+  try {
+    const { password } = req.body
+    const hash = password ? hashPassword(password) : null
+    await sequelize.query(
+      'UPDATE courses SET password_hash = ? WHERE id = ?',
+      { replacements: [hash, req.params.id], type: QueryTypes.UPDATE }
+    )
+    res.json({ success: true, protected: !!hash })
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur.' })
   }
@@ -240,10 +310,12 @@ router.delete('/admin/glossary/:id', requireAdmin, async (req, res) => {
 })
 
 // GET /courses/:id — détail complet d'un cours
-router.get('/courses/:id', async (req, res) => {
+router.get('/courses/:id', optionalAuth, async (req: AuthRequest, res: Response) => {
   try {
     const course = await Course.findOne({ where: { id: req.params.id } })
     if (!course) return res.status(404).json({ error: 'Cours introuvable.' })
+
+    const accessSet = await getUserAccessSet(req.userId)
 
     const chapters = await sequelize.query(
       'SELECT * FROM chapters WHERE course_id = ? ORDER BY order_num ASC',
@@ -279,6 +351,7 @@ router.get('/courses/:id', async (req, res) => {
       is_paid: course.is_paid,
       price: course.price,
       is_active: course.is_active,
+      has_access: accessSet.has(course.id),
       chapters: chaptersWithLessons,
     })
   } catch (err) {

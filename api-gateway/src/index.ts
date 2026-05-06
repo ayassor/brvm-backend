@@ -134,10 +134,12 @@ app.use('/api/news',                    authOptional, proxy(C,  '/api/news',    
 app.use('/api/v1/stocks',               authOptional, proxy(C,  '/api/v1/stocks'));
 app.use('/api/companies',               authOptional, proxy(C,  '/api/companies'));
 app.use('/api/market',                  authOptional, proxy(MD, '/api/market'));
+app.use('/api/market-participants',     authOptional, proxy(C,  '/api/market-participants', '/market-participants'));
 
 // ── Routes admin (news + companies) ─────────────────────────
 app.use('/api/admin/news',              authRequired, proxy(C,  '/api/admin/news',      '/admin/news'));
 app.use('/api/admin/companies',         authRequired, proxy(C,  '/api/admin/companies', '/admin/companies'));
+app.use('/api/admin/market-participants', authRequired, proxy(C, '/api/admin/market-participants', '/market-participants'));
 app.use('/api/education/admin',         authRequired, proxy(E,  '/api/education/admin', '/admin'));
 app.use('/api/education/courses',       authOptional, proxy(E,  '/api/education/courses', '/courses'));
 app.use('/api/education/articles',      authOptional, proxy(E,  '/api/education/articles', '/articles'));

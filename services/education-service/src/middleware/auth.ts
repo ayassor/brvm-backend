@@ -24,3 +24,14 @@ export function requirePremium(req: AuthRequest, res: Response, next: NextFuncti
     next();
   });
 }
+
+// Optional auth: reads user headers if present, never blocks
+export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
+  const userId = req.headers['x-user-id'];
+  if (userId) {
+    req.userId = parseInt(userId as string);
+    req.userRole = req.headers['x-user-role'] as string;
+    req.userSubscription = req.headers['x-user-subscription'] as string;
+  }
+  next();
+}

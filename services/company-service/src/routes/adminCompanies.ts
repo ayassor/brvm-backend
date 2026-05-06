@@ -13,6 +13,13 @@ import {
   upsertRecommendation, upsertThesis,
   createAnalystRecommendation, updateAnalystRecommendation, deleteAnalystRecommendation,
 } from '../controllers/recommendationController';
+import {
+  updateCompanyInfo,
+  upsertFinancialHistory,
+  replaceShareholders,
+  createDividend, updateDividend, deleteDividend,
+  createNews, deleteNews,
+} from '../controllers/adminFundamentalsController';
 
 const router  = Router();
 const upload  = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
@@ -44,5 +51,15 @@ router.put(   '/:ticker/thesis',               requireAdmin, upsertThesis);
 router.post(  '/:ticker/analyst-recommendations',        requireAdmin, createAnalystRecommendation);
 router.put(   '/:ticker/analyst-recommendations/:id',    requireAdmin, updateAnalystRecommendation);
 router.delete('/:ticker/analyst-recommendations/:id',    requireAdmin, deleteAnalystRecommendation);
+
+// ── Infos société & fondamentaux ──────────────────────────────────────────────
+router.put(   '/:ticker',                                requireAdmin, updateCompanyInfo);
+router.put(   '/:ticker/financial-history',              requireAdmin, upsertFinancialHistory);
+router.put(   '/:ticker/shareholders',                   requireAdmin, replaceShareholders);
+router.post(  '/:ticker/dividends',                      requireAdmin, createDividend);
+router.put(   '/:ticker/dividends/:id',                  requireAdmin, updateDividend);
+router.delete('/:ticker/dividends/:id',                  requireAdmin, deleteDividend);
+router.post(  '/:ticker/news',                           requireAdmin, createNews);
+router.delete('/:ticker/news/:id',                       requireAdmin, deleteNews);
 
 export default router;
